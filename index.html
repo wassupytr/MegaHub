@@ -132,20 +132,21 @@
 
   @media (max-width: 400px) { #cards { grid-template-columns: 1fr; } }
 
-  .card {
+    .card {
     background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--radius); overflow: hidden;
+    border-radius: var(--radius); overflow: visible;
     display: flex; flex-direction: column;
     transition: border-color 0.15s, box-shadow 0.15s;
     position: relative;
   }
+
   .card:active { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent-glow); }
   .card.dead { background: var(--dead); border-color: var(--dead-border); }
   .card.favorited { border-color: var(--gold); }
   .card.queued { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent-glow); }
 
-  .card-thumb {
-    width: 100%; aspect-ratio: 1/1; min-height: 160px; object-fit: cover;
+    .card-thumb {
+    width: 100%; aspect-ratio: 1/1; min-height: 150px; object-fit: cover; overflow: hidden; border-radius: var(--radius) var(--radius) 0 0;
     background: var(--surface2);
     display: flex; align-items: center; justify-content: center;
     font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800;
@@ -196,14 +197,15 @@
     font-size: 15px; display: flex; align-items: center; justify-content: center;
     cursor: pointer; z-index: 3; backdrop-filter: blur(4px);
   }
-  .card-dropdown {
-    position: absolute; top: 38px; right: 6px;
+      .card-dropdown {
+    position: fixed;
     background: var(--surface2); border: 1px solid var(--border);
     border-radius: var(--radius-sm); overflow: hidden;
-    z-index: 10; min-width: 130px;
+    z-index: 999; min-width: 130px;
     box-shadow: 0 8px 24px rgba(0,0,0,0.5);
     display: none;
   }
+
   .card-dropdown.open { display: block; }
   .card-dropdown-item {
     padding: 10px 14px; font-size: 12px; cursor: pointer;
@@ -458,7 +460,7 @@
     <div class="filter-pill pinned-tag" data-tag="abs">abs</div>
     <div style="position:relative;flex-shrink:0;">
       <button class="filter-pill" id="tagDropdownBtn">▾ Tags</button>
-      <div id="tagDropdownMenu" style="display:none;position:absolute;top:36px;left:0;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:8px;z-index:50;min-width:200px;max-height:300px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.5);">
+      <div id="tagDropdownMenu" style="display:none;position:fixed;top:auto;left:auto;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:8px;z-index:999;min-width:220px;max-height:60vh;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.5);">
       </div>
     </div>
   </div>
@@ -1442,11 +1444,16 @@ function bindEvents() {
   });
 
   // Dropdown toggle
-  document.getElementById('tagDropdownBtn').addEventListener('click', (e) => {
+    document.getElementById('tagDropdownBtn').addEventListener('click', (e) => {
     e.stopPropagation();
     const menu = document.getElementById('tagDropdownMenu');
+    const btn = document.getElementById('tagDropdownBtn');
+    const rect = btn.getBoundingClientRect();
+    menu.style.top = (rect.bottom + 6) + 'px';
+    menu.style.left = rect.left + 'px';
     menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
   });
+
   document.addEventListener('click', () => {
     document.getElementById('tagDropdownMenu').style.display = 'none';
   });
