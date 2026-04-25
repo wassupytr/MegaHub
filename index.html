@@ -958,19 +958,12 @@ function bindCardEvents() {
   document.querySelectorAll('.card-btn.fav').forEach(btn => {
     btn.addEventListener('click', () => toggleFav(btn.dataset.id));
   });
-  document.querySelectorAll('.tag-pill').forEach(pill => {
+    document.querySelectorAll('.tag-pill').forEach(pill => {
     pill.addEventListener('click', (e) => {
       e.stopPropagation();
-      const tag = pill.dataset.tag;
-      if (currentTagFilter.has(tag)) { currentTagFilter.delete(tag); }
-      else { currentTagFilter.add(tag); }
-      document.querySelectorAll('.tag-filter-pill').forEach(p => {
-        p.classList.toggle('active', currentTagFilter.has(p.dataset.tag));
-      });
-
-      render();
     });
   });
+
 }
 
 // ─── ENTRY MODAL ─────────────────────────────────────────────────────────────
