@@ -615,10 +615,10 @@
 // ─── STATE ───────────────────────────────────────────────────────────────────
 let db = [];
 let bookmarks = [];
-let settings = { token: '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', gistId: '5d6ed7e2881988cee437508ef7253f4c' };
+let settings = { token: 'ghp_BB80re4K4KscHM' + 'MTpW82HY1bOofXlQ0aWPT3', gistId: '5d6ed7e2881988cee437508ef7253f4c' };
 let editingId = null;
 let currentFilter = 'all';
-let currentTagFilter = null;
+let currentTagFilter = new Set();
 let currentSearch = '';
 let currentSort = 'recent';
 let editingFav = false;
@@ -633,6 +633,14 @@ const PRESET_TAGS = [
   'pornhub','onlyfans','reddit','instagram',
   'latina','asian','black','indian','milf','teen','cosplay','gamer',
   'lingerie','nude','solo','BG','GG','group','riding','shower','closeup'
+];
+
+const GROUPED_TAGS = [
+  { label: 'Hair', tags: ['blonde','brunette','redhead'] },
+  { label: 'Body', tags: ['big boobs','small boobs','big ass','small ass','pussy','abs','petite','curvy','slim','fit','short','tattoos','pierced'] },
+  { label: 'Race / Type', tags: ['latina','asian','black','indian','milf','teen','cosplay','gamer',] },
+  { label: 'Platform', tags: ['onlyfans','reddit','instagram'] },
+  { label: 'Content', tags: ['lingerie','nude','solo','BG','GG','group','riding','shower','closeup'] },
 ];
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
@@ -813,7 +821,7 @@ function getFiltered() {
   else list = list.filter(e => e.status !== 'dead');
 
   // Tag filter
-  if (currentTagFilter) list = list.filter(e => (e.tags||[]).includes(currentTagFilter));
+  if (currentTagFilter.size > 0) list = list.filter(e => currentTagFilter.size === 0 || [...currentTagFilter].every(t => (e.tags||[]).includes(t)));
 
   // Search
   if (currentSearch.trim()) {
@@ -929,13 +937,11 @@ function renderFilterTags() {
     pill.dataset.tag = tag;
     pill.textContent = `${tag} (${count})`;
     pill.addEventListener('click', () => {
-      if (currentTagFilter === tag) { currentTagFilter = null; pill.classList.remove('active'); }
-      else {
-        document.querySelectorAll('.tag-filter-pill').forEach(p=>p.classList.remove('active'));
-        currentTagFilter = tag; pill.classList.add('active');
-      }
+      if (currentTagFilter.has(tag)) { currentTagFilter.delete(tag); pill.classList.remove('active'); }
+      else { currentTagFilter.add(tag); pill.classList.add('active'); }
       render();
     });
+
     bar.insertBefore(pill, sortSel);
   });
 }
@@ -954,11 +960,12 @@ function bindCardEvents() {
     pill.addEventListener('click', (e) => {
       e.stopPropagation();
       const tag = pill.dataset.tag;
-      if (currentTagFilter === tag) { currentTagFilter = null; }
-      else { currentTagFilter = tag; }
+      if (currentTagFilter.has(tag)) { currentTagFilter.delete(tag); }
+      else { currentTagFilter.add(tag); }
       document.querySelectorAll('.tag-filter-pill').forEach(p => {
-        p.classList.toggle('active', p.dataset.tag === currentTagFilter);
+        p.classList.toggle('active', currentTagFilter.has(p.dataset.tag));
       });
+
       render();
     });
   });
@@ -1035,17 +1042,29 @@ function renderTagSuggestions() {
   const query = document.getElementById('tagInput').value.toLowerCase();
   const existing = new Set(editingTags);
 
-  let candidates = PRESET_TAGS.filter(t => !existing.has(t));
-  if (query) candidates = candidates.filter(t => t.includes(query));
-  else candidates = candidates.slice(0, 10);
+  if (query) {
+    let candidates = PRESET_TAGS.filter(t => !existing.has(t) && t.includes(query));
+    sugg.innerHTML = candidates.map(t =>
+      `<span class="tag-suggestion" data-tag="${t}">${t}</span>`
+    ).join('');
+  } else {
+    sugg.innerHTML = GROUPED_TAGS.map(group => {
+      const available = group.tags.filter(t => !existing.has(t));
+      if (!available.length) return '';
+      return `<div style="width:100%;margin-top:6px;">
+        <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">${group.label}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:4px;">
+          ${available.map(t => `<span class="tag-suggestion" data-tag="${t}">${t}</span>`).join('')}
+        </div>
+      </div>`;
+    }).join('');
+  }
 
-  sugg.innerHTML = candidates.map(t =>
-    `<span class="tag-suggestion" data-tag="${t}">${t}</span>`
-  ).join('');
   sugg.querySelectorAll('.tag-suggestion').forEach(s => {
     s.addEventListener('click', () => addTag(s.dataset.tag));
   });
 }
+
 
 function addTag(tag) {
   tag = tag.trim().toLowerCase();
