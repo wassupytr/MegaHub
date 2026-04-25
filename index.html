@@ -822,13 +822,8 @@ function getFiltered() {
   else list = list.filter(e => e.status !== 'dead');
 
   // Tag filter
-if (currentTagFilter.size > 0) {
-  if (tagFilterMode === 'AND') {
-    list = list.filter(e => [...currentTagFilter].every(t => (e.tags||[]).includes(t)));
-  } else {
-    list = list.filter(e => [...currentTagFilter].some(t => (e.tags||[]).includes(t)));
-  }
-}
+if (currentTagFilter.size > 0) list = list.filter(e => [...currentTagFilter].every(t => (e.tags||[]).includes(t)));
+
 
   // Search
   if (currentSearch.trim()) {
