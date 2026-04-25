@@ -129,8 +129,7 @@
   .card.favorited { border-color: var(--gold); }
 
   .card-thumb {
-  .card-thumb {
-    width: 100%; aspect-ratio: 1/1; min-height: 160px; object-fit: cover;
+    width: 100%; aspect-ratio: 16/9; object-fit: cover;
     background: var(--surface2);
     display: flex; align-items: center; justify-content: center;
     font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800;
@@ -823,8 +822,13 @@ function getFiltered() {
   else list = list.filter(e => e.status !== 'dead');
 
   // Tag filter
-if (currentTagFilter.size > 0) list = list.filter(e => [...currentTagFilter].every(t => (e.tags||[]).includes(t)));
-
+if (currentTagFilter.size > 0) {
+  if (tagFilterMode === 'AND') {
+    list = list.filter(e => [...currentTagFilter].every(t => (e.tags||[]).includes(t)));
+  } else {
+    list = list.filter(e => [...currentTagFilter].some(t => (e.tags||[]).includes(t)));
+  }
+}
 
   // Search
   if (currentSearch.trim()) {
@@ -884,20 +888,13 @@ function renderCard(e) {
   const links = (e.links||[]);
   const primaryLink = links[0];
 
-    const linksHtml = links.length === 1
-    ? `<a class="mega-link" href="${links[0].url}" target="_blank" rel="noopener">
-        <span class="link-icon">📁</span>
-        <span class="link-label">${links[0].label || 'Open Folder'}</span>
-        <span>↗</span>
-      </a>`
-    : links.length > 1
-    ? `<button class="mega-link card-links-popup" data-id="${e.id}" style="border:none;cursor:pointer;width:100%;text-align:left;">
-        <span class="link-icon">📁</span>
-        <span class="link-label">${links.length} Folders — tap to view</span>
-        <span>↗</span>
-      </button>`
-    : '';
-
+  const linksHtml = links.map((l,i) => `
+    <a class="mega-link" href="${l.url}" target="_blank" rel="noopener">
+      <span class="link-icon">📁</span>
+      <span class="link-label">${l.label || ('Folder '+(i+1))}</span>
+      <span>↗</span>
+    </a>
+  `).join('');
 
   const tagsHtml = (e.tags||[]).map(t =>
     `<span class="tag-pill" data-tag="${t}">${t}</span>`
@@ -966,28 +963,7 @@ function bindCardEvents() {
   document.querySelectorAll('.card-btn.fav').forEach(btn => {
     btn.addEventListener('click', () => toggleFav(btn.dataset.id));
   });
-    document.querySelectorAll('.card-links-popup').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const entry = db.find(x => x.id === btn.dataset.id);
-      if (!entry) return;
-      const links = (entry.links||[]).filter(l => l.url);
-      const html = links.map((l,i) =>
-        `<a class="mega-link" href="${l.url}" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
-          <span>📁</span>
-          <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${l.label || ('Folder '+(i+1))}</span>
-          <span>↗</span>
-        </a>`
-      ).join('');
-      document.getElementById('confirmTitle').textContent = entry.name + ' — Folders';
-      document.getElementById('confirmMsg').innerHTML = `<div style="display:flex;flex-direction:column;margin-top:8px;">${html}</div>`;
-      document.getElementById('confirmYes').style.display = 'none';
-      document.getElementById('confirmNo').textContent = 'Close';
-      openModal('confirmModal');
-    });
-  });
-
-document.querySelectorAll('.tag-pill').forEach(pill => {
+  document.querySelectorAll('.tag-pill').forEach(pill => {
     pill.addEventListener('click', (e) => {
       e.stopPropagation();
       const tag = pill.dataset.tag;
@@ -1201,9 +1177,7 @@ function confirmDelete(id) {
   if (!e) return;
   document.getElementById('confirmTitle').textContent = 'Delete Entry?';
   document.getElementById('confirmMsg').textContent = `This will permanently delete "${e.name}" and all its links. This cannot be undone.`;
-  document.getElementById('confirmYes').style.display = '';
   document.getElementById('confirmYes').textContent = 'Delete';
-  document.getElementById('confirmNo').textContent = 'Cancel';
   confirmCallback = () => {
     db = db.filter(x => x.id !== id);
     saveLocalDb();
@@ -1213,7 +1187,6 @@ function confirmDelete(id) {
   };
   openModal('confirmModal');
 }
-
 
 // ─── PICKER ──────────────────────────────────────────────────────────────────
 function openPicker() {
