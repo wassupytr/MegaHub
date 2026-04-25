@@ -92,6 +92,20 @@
   }
   .filter-pill:active { transform: scale(0.95); }
   .filter-pill.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .filter-pill.pinned-tag.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .filter-pill.selected-tag { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .tag-dropdown-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 7px 10px; border-radius: var(--radius-sm);
+    font-size: 12px; cursor: pointer; color: var(--text2);
+    font-family: 'DM Mono', monospace; white-space: nowrap;
+  }
+  .tag-dropdown-item:active { background: var(--surface3); }
+  .tag-dropdown-item.checked { color: var(--accent2); }
+  .tag-dropdown-group-label {
+    font-size: 10px; color: var(--text3); text-transform: uppercase;
+    letter-spacing: 0.5px; padding: 6px 10px 2px;
+  }
   .filter-pill.dead-filter.active { background: var(--red); border-color: var(--red); color: #fff; }
   .sort-select {
     margin-left: auto; background: var(--surface2); border: 1px solid var(--border);
@@ -175,17 +189,32 @@
   .mega-link:active { background: var(--surface3); }
   .mega-link .link-label { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .mega-link .link-icon { flex-shrink: 0; font-size: 13px; }
-  .card-actions { display: flex; gap: 4px; padding: 0 10px 10px; }
-  .card-btn {
-    flex: 1; background: var(--surface2); border: 1px solid var(--border);
-    color: var(--text2); padding: 5px; border-radius: var(--radius-sm);
-    font-size: 11px; cursor: pointer; font-family: 'DM Mono', monospace;
-    transition: all 0.12s; text-align: center;
+    .card-menu-btn {
+    position: absolute; top: 6px; right: 6px;
+    background: rgba(0,0,0,0.6); border: none; color: #fff;
+    width: 28px; height: 28px; border-radius: 50%;
+    font-size: 15px; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; z-index: 3; backdrop-filter: blur(4px);
   }
-  .card-btn:active { transform: scale(0.96); }
-  .card-btn.edit:active { background: var(--accent); color: #fff; border-color: var(--accent); }
-  .card-btn.del:active { background: var(--red); color: #fff; border-color: var(--red); }
-  .card-btn.fav:active { background: var(--gold); color: #fff; border-color: var(--gold); }
+  .card-dropdown {
+    position: absolute; top: 38px; right: 6px;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); overflow: hidden;
+    z-index: 10; min-width: 130px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    display: none;
+  }
+  .card-dropdown.open { display: block; }
+  .card-dropdown-item {
+    padding: 10px 14px; font-size: 12px; cursor: pointer;
+    display: flex; align-items: center; gap: 8px;
+    color: var(--text2); border: none; background: none;
+    width: 100%; text-align: left;
+    font-family: 'DM Mono', monospace; transition: background 0.1s;
+  }
+  .card-dropdown-item:active { background: var(--surface3); }
+  .card-dropdown-item.danger:active { background: var(--red); color: #fff; }
+
 
   /* EMPTY STATE */
   #empty {
@@ -419,13 +448,21 @@
     </div>
   </header>
 
-  <div class="filter-bar" id="filterBar">
+    <div class="filter-bar" id="filterBar">
     <div class="filter-pill active" data-filter="all">All</div>
     <div class="filter-pill" data-filter="favs">⭐ Favs</div>
     <div class="filter-pill" data-filter="queue">🕐 Queue</div>
     <div class="filter-pill dead-filter" data-filter="dead">💀 Dead</div>
-
+    <div class="filter-pill pinned-tag" data-tag="big boobs">big boobs</div>
+    <div class="filter-pill pinned-tag" data-tag="small boobs">small boobs</div>
+    <div class="filter-pill pinned-tag" data-tag="abs">abs</div>
+    <div style="position:relative;flex-shrink:0;">
+      <button class="filter-pill" id="tagDropdownBtn">▾ Tags</button>
+      <div id="tagDropdownMenu" style="display:none;position:absolute;top:36px;left:0;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:8px;z-index:50;min-width:200px;max-height:300px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.5);">
+      </div>
+    </div>
   </div>
+
 
   <div class="stats-bar" id="statsBar">
     <span><b id="statTotal">0</b> entries</span>
@@ -645,15 +682,15 @@ const PRESET_TAGS = [
   'tattoos','pierced',
   'pornhub','onlyfans','reddit','instagram',
   'latina','asian','black','indian','milf','teen','cosplay','gamer',
-  'lingerie','nude','solo','BG','GG','group','riding','shower','closeup'
+  'lingerie','nude','solo','bg','gg','group','riding','shower','closeup'
 ];
 
 const GROUPED_TAGS = [
   { label: 'Hair', tags: ['blonde','brunette','redhead'] },
   { label: 'Body', tags: ['big boobs','small boobs','big ass','small ass','pussy','abs','petite','curvy','slim','fit','short','tattoos','pierced'] },
   { label: 'Race / Type', tags: ['latina','asian','black','indian','milf','teen','cosplay','gamer',] },
-  { label: 'Platform', tags: ['onlyfans','reddit','instagram'] },
-  { label: 'Content', tags: ['lingerie','nude','solo','BG','GG','group','riding','shower','closeup'] },
+  { label: 'Platform', tags: ['pornhub','onlyfans','reddit','instagram'] },
+  { label: 'Content', tags: ['lingerie','nude','solo','bg','gg','group','riding','shower','closeup'] },
 ];
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
@@ -909,25 +946,26 @@ function renderCard(e) {
     `<span class="tag-pill" data-tag="${t}">${t}</span>`
   ).join('');
 
-  return `
+    return `
     <div class="card ${isDead?'dead':''} ${e.fav?'favorited':''} ${e.queue?'queued':''}" data-id="${e.id}">
       <div class="card-thumb">
         ${thumbHtml}
         <span class="initials" style="${e.thumb?'display:none':''}">${initials}</span>
-        ${e.fav ? '<div class="fav-star">⭐</div>' : ''}
         ${isDead ? '<div class="dead-badge">DEAD</div>' : ''}
+        <button class="card-menu-btn" data-id="${e.id}">⋯</button>
+        <div class="card-dropdown" id="dropdown-${e.id}">
+          <button class="card-dropdown-item fav-toggle" data-id="${e.id}">${e.fav ? '⭐ Unfavorite' : '☆ Favorite'}</button>
+          <button class="card-dropdown-item queue-toggle" data-id="${e.id}">${e.queue ? '🕐 Unqueue' : '🕐 Add to Queue'}</button>
+          <button class="card-dropdown-item edit-btn" data-id="${e.id}">✏️ Edit</button>
+          <button class="card-dropdown-item danger del-btn" data-id="${e.id}">🗑 Delete</button>
+        </div>
       </div>
       <div class="card-body">
         <div class="card-name">${e.name}</div>
         ${e.aliases&&e.aliases.length ? `<div class="card-aliases">aka ${e.aliases.join(', ')}</div>` : ''}
         ${tagsHtml ? `<div class="card-tags">${tagsHtml}</div>` : ''}
-        ${e.notes ? `<div class="card-notes">${e.notes.slice(0,80)}${e.notes.length>80?'…':''}</div>` : ''}
+        ${e.notes ? `<div class="card-notes">${e.notes.slice(0,60)}${e.notes.length>60?'…':''}</div>` : ''}
         <div class="card-links">${linksHtml}</div>
-      </div>
-      <div class="card-actions">
-        <button class="card-btn fav" data-id="${e.id}">${e.fav?'★':'☆'}</button>
-        <button class="card-btn edit" data-id="${e.id}">Edit</button>
-        <button class="card-btn del" data-id="${e.id}">Delete</button>
       </div>
     </div>
   `;
@@ -935,50 +973,106 @@ function renderCard(e) {
 
 function renderFilterTags() {
   const bar = document.getElementById('filterBar');
-  // Remove old tag pills
-  const existing = bar.querySelectorAll('.tag-filter-pill');
-  existing.forEach(e => e.remove());
 
-  // Gather all tags from active entries
-  const tagCounts = {};
-  db.filter(e=>e.status!=='dead').forEach(e => {
-    (e.tags||[]).forEach(t => { tagCounts[t] = (tagCounts[t]||0)+1; });
+  // Remove old selected tag pills
+  bar.querySelectorAll('.selected-tag').forEach(e => e.remove());
+
+  // Update pinned tag active states
+  bar.querySelectorAll('.pinned-tag').forEach(pill => {
+    pill.classList.toggle('active', currentTagFilter.has(pill.dataset.tag));
   });
-  const sorted = Object.entries(tagCounts).sort((a,b)=>b[1]-a[1]).slice(0,12);
 
-  const sortSel = bar.querySelector('.sort-select');
-  sorted.forEach(([tag, count]) => {
+  // Insert selected-tag pills for dropdown selections (not pinned)
+  const PINNED = ['big boobs', 'small boobs', 'abs'];
+  const dropdownSelected = [...currentTagFilter].filter(t => !PINNED.includes(t));
+  const dropdownBtn = document.getElementById('tagDropdownBtn');
+  dropdownSelected.forEach(tag => {
     const pill = document.createElement('div');
-    pill.className = 'filter-pill tag-filter-pill' + (currentTagFilter.has(tag)?' active':'');
+    pill.className = 'filter-pill selected-tag';
     pill.dataset.tag = tag;
-    pill.textContent = `${tag} (${count})`;
+    pill.textContent = tag + ' ×';
     pill.addEventListener('click', () => {
-      if (currentTagFilter.has(tag)) { currentTagFilter.delete(tag); pill.classList.remove('active'); }
-      else { currentTagFilter.add(tag); pill.classList.add('active'); }
+      currentTagFilter.delete(tag);
+      renderFilterTags();
       render();
     });
+    bar.insertBefore(pill, dropdownBtn.parentElement);
+  });
 
-    bar.insertBefore(pill, sortSel);
+  // Rebuild dropdown menu
+  const menu = document.getElementById('tagDropdownMenu');
+  const PINNED_SET = new Set(PINNED);
+  const tagCounts = {};
+  db.filter(e => e.status !== 'dead').forEach(e => {
+    (e.tags||[]).forEach(t => { tagCounts[t] = (tagCounts[t]||0)+1; });
+  });
+
+  const groups = [
+    { label: 'Hair', tags: ['blonde','brunette','redhead'] },
+    { label: 'Body', tags: ['big boobs','small boobs','big ass','small ass','pussy','abs','petite','curvy','slim','fit','short','tattoos','pierced'] },
+    { label: 'Race / Type', tags: ['latina','asian','black','indian','milf','teen','cosplay','gamer',] },
+    { label: 'Platform', tags: ['pornhub','onlyfans','reddit','instagram'] },
+    { label: 'Content', tags: ['lingerie','nude','solo','bg','gg','group','riding','shower','closeup'] },
+    ];
+
+  menu.innerHTML = groups.map(group => {
+    const available = group.tags.filter(t => !PINNED_SET.has(t) && tagCounts[t]);
+    if (!available.length) return '';
+    return `<div class="tag-dropdown-group-label">${group.label}</div>` +
+      available.map(t => `
+        <div class="tag-dropdown-item ${currentTagFilter.has(t)?'checked':''}" data-tag="${t}">
+          ${currentTagFilter.has(t) ? '✓' : '○'} ${t} ${tagCounts[t]?`(${tagCounts[t]})`:''}
+        </div>
+      `).join('');
+  }).join('');
+
+  menu.querySelectorAll('.tag-dropdown-item').forEach(item => {
+    item.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const tag = item.dataset.tag;
+      if (currentTagFilter.has(tag)) { currentTagFilter.delete(tag); }
+      else { currentTagFilter.add(tag); }
+      renderFilterTags();
+      render();
+    });
   });
 }
 
+
 function bindCardEvents() {
-  document.querySelectorAll('.card-btn.edit').forEach(btn => {
-    btn.addEventListener('click', () => openEditModal(btn.dataset.id));
-  });
-  document.querySelectorAll('.card-btn.del').forEach(btn => {
-    btn.addEventListener('click', () => confirmDelete(btn.dataset.id));
-  });
-  document.querySelectorAll('.card-btn.fav').forEach(btn => {
-    btn.addEventListener('click', () => toggleFav(btn.dataset.id));
-  });
-    document.querySelectorAll('.tag-pill').forEach(pill => {
-    pill.addEventListener('click', (e) => {
+  document.querySelectorAll('.card-menu-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
       e.stopPropagation();
+      const id = btn.dataset.id;
+      const dropdown = document.getElementById('dropdown-' + id);
+      document.querySelectorAll('.card-dropdown').forEach(d => {
+        if (d !== dropdown) d.classList.remove('open');
+      });
+      dropdown.classList.toggle('open');
     });
   });
 
+  document.addEventListener('click', () => {
+    document.querySelectorAll('.card-dropdown').forEach(d => d.classList.remove('open'));
+  }, { once: false });
+
+  document.querySelectorAll('.fav-toggle').forEach(btn => {
+    btn.addEventListener('click', (e) => { e.stopPropagation(); toggleFav(btn.dataset.id); });
+  });
+  document.querySelectorAll('.queue-toggle').forEach(btn => {
+    btn.addEventListener('click', (e) => { e.stopPropagation(); toggleQueue(btn.dataset.id); });
+  });
+  document.querySelectorAll('.edit-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => { e.stopPropagation(); openEditModal(btn.dataset.id); });
+  });
+  document.querySelectorAll('.del-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => { e.stopPropagation(); confirmDelete(btn.dataset.id); });
+  });
+  document.querySelectorAll('.tag-pill').forEach(pill => {
+    pill.addEventListener('click', (e) => { e.stopPropagation(); });
+  });
 }
+
 
 // ─── ENTRY MODAL ─────────────────────────────────────────────────────────────
 function openAddModal() {
@@ -1183,6 +1277,15 @@ function toggleFav(id) {
   render();
   showToast(e.fav ? '⭐ Added to favorites' : 'Removed from favorites');
 }
+function toggleQueue(id) {
+  const e = db.find(x => x.id === id);
+  if (!e) return;
+  e.queue = !e.queue;
+  saveLocalDb();
+  syncToGist();
+  render();
+  showToast(e.queue ? '🕐 Added to queue' : 'Removed from queue');
+}
 
 function confirmDelete(id) {
   const e = db.find(x => x.id === id);
@@ -1316,17 +1419,36 @@ function bindEvents() {
   });
 
   // Filter bar
-  document.getElementById('filterBar').addEventListener('click', e => {
+   document.getElementById('filterBar').addEventListener('click', e => {
     const pill = e.target.closest('.filter-pill[data-filter]');
     if (!pill) return;
     document.querySelectorAll('.filter-pill[data-filter]').forEach(p => p.classList.remove('active'));
     pill.classList.add('active');
     currentFilter = pill.dataset.filter;
-    if (currentFilter === 'all') {
-      currentTagFilter = new Set();
-      document.querySelectorAll('.tag-filter-pill').forEach(p => p.classList.remove('active'));
-    }
+    if (currentFilter === 'all') { currentTagFilter = new Set(); }
+    renderFilterTags();
     render();
+  });
+
+  // Pinned tag pills
+  document.querySelectorAll('.pinned-tag').forEach(pill => {
+    pill.addEventListener('click', () => {
+      const tag = pill.dataset.tag;
+      if (currentTagFilter.has(tag)) { currentTagFilter.delete(tag); }
+      else { currentTagFilter.add(tag); }
+      renderFilterTags();
+      render();
+    });
+  });
+
+  // Dropdown toggle
+  document.getElementById('tagDropdownBtn').addEventListener('click', (e) => {
+    e.stopPropagation();
+    const menu = document.getElementById('tagDropdownMenu');
+    menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+  });
+  document.addEventListener('click', () => {
+    document.getElementById('tagDropdownMenu').style.display = 'none';
   });
 
 
