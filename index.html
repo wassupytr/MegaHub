@@ -110,11 +110,12 @@
   .stats-bar span b { color: var(--text2); }
 
   /* CARD GRID */
-  #cards {
+    #cards {
     flex: 1; overflow-y: auto; padding: 16px 20px;
     display: grid; grid-template-columns: 1fr 1fr;
-    gap: 12px; align-content: start;
+    gap: 12px; align-content: start; grid-auto-rows: auto;
   }
+
   @media (max-width: 400px) { #cards { grid-template-columns: 1fr; } }
 
   .card {
