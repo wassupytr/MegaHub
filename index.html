@@ -563,11 +563,13 @@
       </select>
     </div>
 
-    <div id="pickerResult" style="display:none" class="picker-result">
+        <div id="pickerResult" style="display:none" class="picker-result">
+      <img id="pickerThumb" src="" style="display:none;width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:var(--radius-sm);margin-bottom:4px;" alt="">
       <div class="pick-name" id="pickerName"></div>
       <div class="pick-tags" id="pickerTags"></div>
       <div class="picker-links" id="pickerLinks"></div>
     </div>
+
 
     <button class="spin-btn" id="spinBtn">🎲 Pick Random</button>
     <button class="cancel-btn" id="cancelPickerBtn">Close</button>
@@ -1215,8 +1217,11 @@ function pickRandom() {
   if (tag) pool = pool.filter(e => (e.tags||[]).includes(tag));
   if (!pool.length) { showToast('No entries match that filter', 'warn'); return; }
   const e = pool[Math.floor(Math.random() * pool.length)];
-  document.getElementById('pickerName').textContent = e.name;
+    document.getElementById('pickerName').textContent = e.name;
   document.getElementById('pickerTags').innerHTML = (e.tags||[]).map(t=>`<span class="tag-pill">${t}</span>`).join('');
+  const thumbEl = document.getElementById('pickerThumb');
+  if (e.thumb) { thumbEl.src = e.thumb; thumbEl.style.display = 'block'; }
+  else { thumbEl.style.display = 'none'; }
   document.getElementById('pickerLinks').innerHTML = (e.links||[]).map((l,i) =>
     `<a class="mega-link" href="${l.url}" target="_blank" rel="noopener">
       <span class="link-icon">📁</span>
