@@ -619,6 +619,7 @@ let settings = { token: 'ghp_BB80re4K4KscHM' + 'MTpW82HY1bOofXlQ0aWPT3', gistId:
 let editingId = null;
 let currentFilter = 'all';
 let currentTagFilter = new Set();
+let tagFilterMode = 'OR';
 let currentSearch = '';
 let currentSort = 'recent';
 let editingFav = false;
@@ -821,7 +822,13 @@ function getFiltered() {
   else list = list.filter(e => e.status !== 'dead');
 
   // Tag filter
-  if (currentTagFilter.size > 0) list = list.filter(e => currentTagFilter.size === 0 || [...currentTagFilter].every(t => (e.tags||[]).includes(t)));
+if (currentTagFilter.size > 0) {
+  if (tagFilterMode === 'AND') {
+    list = list.filter(e => [...currentTagFilter].every(t => (e.tags||[]).includes(t)));
+  } else {
+    list = list.filter(e => [...currentTagFilter].some(t => (e.tags||[]).includes(t)));
+  }
+}
 
   // Search
   if (currentSearch.trim()) {
@@ -933,7 +940,7 @@ function renderFilterTags() {
   const sortSel = bar.querySelector('.sort-select');
   sorted.forEach(([tag, count]) => {
     const pill = document.createElement('div');
-    pill.className = 'filter-pill tag-filter-pill' + (currentTagFilter===tag?' active':'');
+    pill.className = 'filter-pill tag-filter-pill' + (currentTagFilter.has(tag)?' active':'');
     pill.dataset.tag = tag;
     pill.textContent = `${tag} (${count})`;
     pill.addEventListener('click', () => {
@@ -1300,15 +1307,35 @@ function bindEvents() {
     document.querySelectorAll('.filter-pill[data-filter]').forEach(p => p.classList.remove('active'));
     pill.classList.add('active');
     currentFilter = pill.dataset.filter;
+    if (currentFilter === 'all') {
+      currentTagFilter = new Set();
+      document.querySelectorAll('.tag-filter-pill').forEach(p => p.classList.remove('active'));
+    }
     render();
   });
 
+
   // Sort
-  const sortHtml = '<select class="sort-select" id="sortSelect"><option value="recent">Recent</option><option value="oldest">Oldest</option><option value="az">A→Z</option><option value="za">Z→A</option><option value="fav">Favs first</option></select>';
-  document.getElementById('filterBar').insertAdjacentHTML('beforeend', sortHtml);
-  document.getElementById('sortSelect').addEventListener('change', e => {
-    currentSort = e.target.value; render();
-  });
+  const sortHtml = `
+  <select class="sort-select" id="modeSelect" style="margin-left:0">
+    <option value="OR">OR</option>
+    <option value="AND">AND</option>
+  </select>
+  <select class="sort-select" id="sortSelect">
+    <option value="recent">Recent</option>
+    <option value="oldest">Oldest</option>
+    <option value="az">A→Z</option>
+    <option value="za">Z→A</option>
+    <option value="fav">Favs first</option>
+  </select>`;
+document.getElementById('filterBar').insertAdjacentHTML('beforeend', sortHtml);
+document.getElementById('sortSelect').addEventListener('change', e => {
+  currentSort = e.target.value; render();
+});
+document.getElementById('modeSelect').addEventListener('change', e => {
+  tagFilterMode = e.target.value; render();
+});
+
 
   // Entry modal
   document.getElementById('cancelEntryBtn').addEventListener('click', () => closeModal('entryModal'));
