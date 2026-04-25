@@ -421,7 +421,9 @@
   <div class="filter-bar" id="filterBar">
     <div class="filter-pill active" data-filter="all">All</div>
     <div class="filter-pill" data-filter="favs">⭐ Favs</div>
+    <div class="filter-pill" data-filter="queue">🕐 Queue</div>
     <div class="filter-pill dead-filter" data-filter="dead">💀 Dead</div>
+
   </div>
 
   <div class="stats-bar" id="statsBar">
@@ -490,13 +492,18 @@
       <textarea class="form-textarea" id="fieldNotes" placeholder="Anything worth remembering…"></textarea>
     </div>
 
-    <div class="form-group">
+        <div class="form-group">
       <div class="form-label">Status</div>
       <select class="form-input" id="fieldStatus">
         <option value="active">✅ Active</option>
         <option value="dead">💀 Dead Link</option>
       </select>
     </div>
+    <div class="form-group">
+      <div class="form-label">Queue</div>
+      <div class="icon-btn" id="queueToggleBtn" style="width:100%;border-radius:8px;font-size:20px;height:38px;">🕐</div>
+    </div>
+
 
     <button class="submit-btn" id="submitBtn">Save Entry</button>
     <button class="cancel-btn" id="cancelEntryBtn">Cancel</button>
@@ -624,7 +631,8 @@ let tagFilterMode = 'OR';
 let currentSearch = '';
 let currentSort = 'recent';
 let editingFav = false;
-let currentLinks = [];
+let editingFQueue = false;
+  let currentLinks = [];
 let editingTags = [];
 let confirmCallback = null;
 
@@ -818,9 +826,11 @@ function getFiltered() {
   let list = [...db];
 
   // Status filter
-  if (currentFilter === 'favs') list = list.filter(e => e.fav);
+    if (currentFilter === 'favs') list = list.filter(e => e.fav);
+  else if (currentFilter === 'queue') list = list.filter(e => e.queue);
   else if (currentFilter === 'dead') list = list.filter(e => e.status === 'dead');
   else list = list.filter(e => e.status !== 'dead');
+
 
   // Tag filter
 if (currentTagFilter.size > 0) list = list.filter(e => [...currentTagFilter].every(t => (e.tags||[]).includes(t)));
@@ -971,6 +981,7 @@ function bindCardEvents() {
 function openAddModal() {
   editingId = null;
   editingFav = false;
+  editingQueue = false;
   editingTags = [];
   currentLinks = [{ label: '', url: '' }];
   document.getElementById('modalTitle').textContent = 'Add Entry';
@@ -982,6 +993,7 @@ function openAddModal() {
   document.getElementById('thumbPreview').style.display = 'none';
   document.getElementById('dupeWarning').classList.remove('show');
   updateFavBtn();
+   updateQueueBtn();
   renderTagsInModal();
   renderLinksInModal();
   openModal('entryModal');
@@ -993,6 +1005,7 @@ function openEditModal(id) {
   if (!e) return;
   editingId = id;
   editingFav = !!e.fav;
+  editingQueue = !!e.queue;
   editingTags = [...(e.tags||[])];
   currentLinks = e.links && e.links.length ? e.links.map(l=>({...l})) : [{ label: '', url: '' }];
   document.getElementById('modalTitle').textContent = 'Edit Entry';
@@ -1004,6 +1017,7 @@ function openEditModal(id) {
   document.getElementById('dupeWarning').classList.remove('show');
   updateThumbPreview(e.thumb||'');
   updateFavBtn();
+  updateQueueBtn();
   renderTagsInModal();
   renderLinksInModal();
   openModal('entryModal');
@@ -1013,6 +1027,12 @@ function updateFavBtn() {
   const btn = document.getElementById('favToggleBtn');
   btn.textContent = editingFav ? '⭐' : '☆';
   btn.style.borderColor = editingFav ? 'var(--gold)' : 'var(--border)';
+}
+function updateQueueBtn() {
+  const btn = document.getElementById('queueToggleBtn');
+  btn.textContent = editingQueue ? '🕐' : '🕐';
+  btn.style.borderColor = editingQueue ? 'var(--accent2)' : 'var(--border)';
+  btn.style.background = editingQueue ? 'var(--accent)' : 'var(--surface2)';
 }
 
 function renderTagsInModal() {
@@ -1137,10 +1157,10 @@ function submitEntry() {
   if (editingId) {
     const idx = db.findIndex(e => e.id === editingId);
     if (idx >= 0) {
-      db[idx] = { ...db[idx], name, aliases, tags: editingTags, links, thumb, notes, status, fav: editingFav };
+      db[idx] = { ...db[idx], name, aliases, tags: editingTags, links, thumb, notes, status, fav: editingFav, queue: editingQueue };
     }
   } else {
-    db.unshift({ id: uid(), name, aliases, tags: editingTags, links, thumb, notes, status, fav: editingFav, added: Date.now() });
+    db.unshift({ id: uid(), name, aliases, tags: editingTags, links, thumb, notes, status, fav: editingFav, queue: editingQueue, added: Date.now() });
   }
 
   saveLocalDb();
@@ -1329,8 +1349,11 @@ document.getElementById('modeSelect').addEventListener('change', e => {
   // Entry modal
   document.getElementById('cancelEntryBtn').addEventListener('click', () => closeModal('entryModal'));
   document.getElementById('submitBtn').addEventListener('click', submitEntry);
-  document.getElementById('favToggleBtn').addEventListener('click', () => {
+    document.getElementById('favToggleBtn').addEventListener('click', () => {
     editingFav = !editingFav; updateFavBtn();
+  });
+  document.getElementById('queueToggleBtn').addEventListener('click', () => {
+    editingQueue = !editingQueue; updateQueueBtn();
   });
   document.getElementById('addLinkBtn').addEventListener('click', () => {
     currentLinks.push({ label: '', url: '' }); renderLinksInModal();
