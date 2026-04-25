@@ -950,18 +950,19 @@ function renderCard(e) {
 
     return `
     <div class="card ${isDead?'dead':''} ${e.fav?'favorited':''} ${e.queue?'queued':''}" data-id="${e.id}">
-      <div class="card-thumb">
+            <div class="card-thumb">
         ${thumbHtml}
         <span class="initials" style="${e.thumb?'display:none':''}">${initials}</span>
         ${isDead ? '<div class="dead-badge">DEAD</div>' : ''}
         <button class="card-menu-btn" data-id="${e.id}">⋯</button>
-        <div class="card-dropdown" id="dropdown-${e.id}">
-          <button class="card-dropdown-item fav-toggle" data-id="${e.id}">${e.fav ? '⭐ Unfavorite' : '☆ Favorite'}</button>
-          <button class="card-dropdown-item queue-toggle" data-id="${e.id}">${e.queue ? '🕐 Unqueue' : '🕐 Add to Queue'}</button>
-          <button class="card-dropdown-item edit-btn" data-id="${e.id}">✏️ Edit</button>
-          <button class="card-dropdown-item danger del-btn" data-id="${e.id}">🗑 Delete</button>
-        </div>
       </div>
+      <div class="card-dropdown" id="dropdown-${e.id}">
+        <button class="card-dropdown-item fav-toggle" data-id="${e.id}">${e.fav ? '⭐ Unfavorite' : '☆ Favorite'}</button>
+        <button class="card-dropdown-item queue-toggle" data-id="${e.id}">${e.queue ? '🕐 Unqueue' : '🕐 Add to Queue'}</button>
+        <button class="card-dropdown-item edit-btn" data-id="${e.id}">✏️ Edit</button>
+        <button class="card-dropdown-item danger del-btn" data-id="${e.id}">🗑 Delete</button>
+      </div>
+
       <div class="card-body">
         <div class="card-name">${e.name}</div>
         ${e.aliases&&e.aliases.length ? `<div class="card-aliases">aka ${e.aliases.join(', ')}</div>` : ''}
