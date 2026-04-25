@@ -649,9 +649,14 @@ window.addEventListener('DOMContentLoaded', () => {
 function loadSettings() {
   try {
     const s = sessionStorage.getItem('megalib_settings');
-    if (s) settings = JSON.parse(s);
+    if (s) {
+      const saved = JSON.parse(s);
+      if (saved.token) settings.token = saved.token;
+      if (saved.gistId) settings.gistId = saved.gistId;
+    }
   } catch(e) {}
 }
+
 function saveSettings() {
   sessionStorage.setItem('megalib_settings', JSON.stringify(settings));
 }
